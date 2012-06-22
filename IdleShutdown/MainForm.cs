@@ -33,7 +33,8 @@ namespace IdleShutdown
             postponed = false;
             waittime = DefaultWaitTime;
             progressBarTime.Maximum = (int)waittime.TotalSeconds;
-            stopwatch.Restart();
+            stopwatch.Reset();
+            stopwatch.Start();
             this.Show();
         }
 
@@ -71,7 +72,8 @@ namespace IdleShutdown
             notifyIcon.ShowBalloonTip(5000, "Idle Shutdown timer postponed for " + numericUpDownPostponeMinutes.Value + " minutes.", " ", ToolTipIcon.Info);
             postponed = true;
             waittime = TimeSpan.FromMinutes((double)numericUpDownPostponeMinutes.Value);
-            stopwatch.Restart();
+            stopwatch.Reset();
+            stopwatch.Start();
             this.Hide();
         }
 
