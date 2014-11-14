@@ -12,43 +12,64 @@ namespace IdleShutdown
 {
     public partial class MainForm : Form
     {
-        TimeSpan DefaultWaitTime = TimeSpan.FromMinutes(5);
-        TimeSpan waittime;
-        Stopwatch stopwatch = new Stopwatch();
-        bool postponed = false;
+        public TimeSpan InitialDelay { get; set; }
+        public bool ExitOnAbort { get; set; }
+
+        private TimeSpan waitTime;
+        private Stopwatch stopwatch = new Stopwatch();
+        private bool postponed = false;
+
+        // so clicking on the shutdown icon isn't enough to start a shutdown accidentally...
+        private bool waitingForFirstTrigger = true;
 
         public MainForm()
         {
             InitializeComponent();
 
-            double minutes;
-            if (Environment.GetCommandLineArgs().Length > 1 && Double.TryParse(Environment.GetCommandLineArgs()[1], out minutes))
-                DefaultWaitTime = TimeSpan.FromMinutes(minutes);
+            notifyIcon.ContextMenu = new ContextMenu();
+            notifyIcon.ContextMenu.MenuItems.Add("Exit", (sender, args) =>
+            {
+                MessageBox.Show("Exiting");
+                Application.Exit();
+            });
+        }
 
+        private void MainForm_Load(object sender, EventArgs e)
+        {
             StartShutdownTimer();
         }
 
-        private void StartShutdownTimer()
+        public void StartShutdownTimer()
         {
+            waitingForFirstTrigger = false;
             postponed = false;
-            waittime = DefaultWaitTime;
-            progressBarTime.Maximum = (int)waittime.TotalSeconds;
+            waitTime = InitialDelay;
+            progressBarTime.Maximum = (int)waitTime.TotalSeconds;
             stopwatch.Reset();
             stopwatch.Start();
+            timerShutdown.Enabled = true;
             this.Show();
         }
 
         private void buttonAbort_Click(object sender, EventArgs e)
         {
-            Application.Exit();
+            if (!this.ExitOnAbort)
+            {
+                timerShutdown.Enabled = false;
+                this.Hide();
+            }
+            else
+            {
+                Application.Exit();
+            }
         }
 
         private void timerShutdown_Tick(object sender, EventArgs e)
         {
-            TimeSpan timeleft = (waittime - stopwatch.Elapsed);
+            TimeSpan timeleft = (waitTime - stopwatch.Elapsed);
             if (postponed)
             {
-                if ((int)(waittime - stopwatch.Elapsed).TotalSeconds <= 0)
+                if ((int)(waitTime - stopwatch.Elapsed).TotalSeconds <= 0)
                     StartShutdownTimer();
             }
             else
@@ -63,7 +84,8 @@ namespace IdleShutdown
                     labelShutdownTimer.Text += timeleft.Seconds + " seconds ";
 
                 if ((int)timeleft.TotalSeconds <= 0)
-                    Process.Start("shutdown", "/s /t 0");
+                    MessageBox.Show("Shutdown");
+                    //Process.Start("shutdown", "/s /t 0");
             }
         }
 
@@ -71,7 +93,7 @@ namespace IdleShutdown
         {
             notifyIcon.ShowBalloonTip(5000, "Idle Shutdown timer postponed for " + numericUpDownPostponeMinutes.Value + " minutes.", " ", ToolTipIcon.Info);
             postponed = true;
-            waittime = TimeSpan.FromMinutes((double)numericUpDownPostponeMinutes.Value);
+            waitTime = TimeSpan.FromMinutes((double)numericUpDownPostponeMinutes.Value);
             stopwatch.Reset();
             stopwatch.Start();
             this.Hide();
@@ -79,8 +101,11 @@ namespace IdleShutdown
 
         private void notifyIcon_Click(object sender, EventArgs e)
         {
-            this.Show();
-            StartShutdownTimer();
+            if (!waitingForFirstTrigger)
+            {
+                this.Show();
+                StartShutdownTimer();
+            }
         }
     }
 }

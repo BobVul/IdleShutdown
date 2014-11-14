@@ -61,7 +61,6 @@
             // 
             // timerShutdown
             // 
-            this.timerShutdown.Enabled = true;
             this.timerShutdown.Tick += new System.EventHandler(this.timerShutdown_Tick);
             // 
             // labelPostpone
@@ -141,6 +140,7 @@
             this.Name = "MainForm";
             this.Text = "IdleShutdown";
             this.TopMost = true;
+            this.Load += new System.EventHandler(this.MainForm_Load);
             this.panelOptions.ResumeLayout(false);
             this.panelOptions.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.numericUpDownPostponeMinutes)).EndInit();
