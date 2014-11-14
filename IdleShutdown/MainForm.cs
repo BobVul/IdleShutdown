@@ -84,8 +84,7 @@ namespace IdleShutdown
                     labelShutdownTimer.Text += timeleft.Seconds + " seconds ";
 
                 if ((int)timeleft.TotalSeconds <= 0)
-                    MessageBox.Show("Shutdown");
-                    //Process.Start("shutdown", "/s /t 0");
+                    Process.Start("shutdown", "/s /t 0");
             }
         }
 
