@@ -64,6 +64,12 @@ namespace IdleShutdown
                 hasMutex = true;
             }
 
+            if (persistent && !hasMutex)
+            {
+                MessageBox.Show("A persistent instance can only be started when no other instances are running.");
+                return;
+            }
+
             if (!persistent)
             {
                 if (!hasMutex)
@@ -72,6 +78,10 @@ namespace IdleShutdown
                 }
                 else
                 {
+                    // we only use the mutex for checking if persistent exists
+                    // otherwise, allow multiple non-persistent instances by releasing the mutex *before* timer starts
+                    instanceMutex.ReleaseMutex();
+
                     MainForm form = new MainForm();
                     form.InitialDelay = TimeSpan.FromMinutes(initialDelay);
                     form.ExitOnAbort = true;
@@ -88,10 +98,10 @@ namespace IdleShutdown
                 // force the creation of a handle
                 IntPtr temp = form.Handle;
                 Application.Run();
-            }
 
-            if (hasMutex)
+                // for persistent instances release the mutex *after* it's finished/closed
                 instanceMutex.ReleaseMutex();
+            }
         }
     }
 }
