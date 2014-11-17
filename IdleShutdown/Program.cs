@@ -1,8 +1,10 @@
 ﻿using Mono.Options;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading;
 using System.Windows.Forms;
 
@@ -26,6 +28,7 @@ namespace IdleShutdown
 
             double initialDelay = 5;
             bool persistent = false;
+            bool showVersion = false;
             bool showHelp = false;
             OptionSet options = new OptionSet()
             {
@@ -37,11 +40,19 @@ namespace IdleShutdown
                 { "p|persistent",
                     "Start an instance that sits in the background waiting for notification from another instance.\n" +
                     "See issue #1 on GitHub for details.", (p) => persistent = p != null },
-                { "?|h|help", "Show this help.", (h) => showHelp = h != null }
+                { "version", "Display the version and exit.", (v) => showVersion = v != null },
+                { "?|h|help", "Display this help and exit.", (h) => showHelp = h != null }
             };
             
             options.Parse(args);
             
+            if (showVersion)
+            {
+                AssemblyInformationalVersionAttribute version = (AssemblyInformationalVersionAttribute)Assembly.GetExecutingAssembly().GetCustomAttributes(typeof(AssemblyInformationalVersionAttribute), false)[0];
+                MessageBox.Show(version.InformationalVersion);
+                return;
+            }
+
             if (showHelp)
             {
                 // why does Mono.Options apparently not include a way to get descriptions as a string?
